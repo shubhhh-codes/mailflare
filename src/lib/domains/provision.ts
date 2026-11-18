@@ -106,15 +106,19 @@ export async function provisionDomainOnCloudflare(
 		}
 
 		if (enableSending) {
-			// Cloudflare refuses (401, code 2036) while another service's MX records
-			// are on the hostname; replacing them follows the same consent as routing.
-			const { subdomain, created } = await ensureSendingSubdomain(env, zone.id, normalized, {
-				replaceMx: options?.replaceMxRecords,
-				deletedMx: changes.deletedMxRecords,
-			});
-			sendingSubdomainTag = subdomain.tag;
-			sendingEnabled = subdomain.enabled;
-			if (created) changes.createdSendingSubdomainTag = subdomain.tag;
+			try {
+				// Cloudflare refuses (401, code 2036) while another service's MX records
+				// are on the hostname; replacing them follows the same consent as routing.
+				const { subdomain, created } = await ensureSendingSubdomain(env, zone.id, normalized, {
+					replaceMx: options?.replaceMxRecords,
+					deletedMx: changes.deletedMxRecords,
+				});
+				sendingSubdomainTag = subdomain.tag;
+				sendingEnabled = subdomain.enabled;
+				if (created) changes.createdSendingSubdomainTag = subdomain.tag;
+			} catch (sendingError) {
+				console.warn("Cloudflare Email Sending unavailable (requires paid plan or manual setup), proceeding with receive-only:", sendingError);
+			}
 		}
 	} catch (error) {
 		await rollbackDomainProvisioning(env, changes);

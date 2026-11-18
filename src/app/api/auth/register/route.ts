@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 		await ensureBookingUsername(env, userId, email);
 		const added = await addDomainForUser(env, userId, domainName, {
 			enableRouting: true,
-			enableSending: firstRunParsed.data.enableSending ?? true,
+			enableSending: firstRunParsed.data.enableSending ?? false,
 			replaceMxRecords: firstRunParsed.data.replaceMxRecords,
 			skipDns: firstRunParsed.data.skipDns,
 		});
